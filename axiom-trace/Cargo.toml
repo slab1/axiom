@@ -22,7 +22,15 @@ license = "MIT"
 # and gate the MCP module behind `#[cfg(feature = "mcp")]`.
 
 [features]
-# Declared so the `#![cfg(feature = "mcp")]` in src/lib.rs is a known
-# feature (silences the `unexpected_cfgs` warning). Enabled together with
-# the rmcp dependency in Phase 4.
-mcp = []
+# Enables the MCP server wrapper (src/mcp.rs) that exposes the ledger as
+# tools. Pulls in `rmcp` (Rust MCP SDK, `server` feature). The core
+# ledger in src/lib.rs stays always-compiled and testable without this.
+mcp = ["dep:rmcp", "dep:serde"]
+
+[dependencies]
+# Rust MCP SDK. Available features: base64, client, server, transport-*, ...
+# (there is NO `stdlib` feature — that was a scaffold mistake that broke CI).
+rmcp = { version = "0.1", features = ["server"], optional = true }
+# rmcp re-exports `schemars` but not `serde`; pull serde directly for the
+# tool-param derives (gated by `mcp` so the default build stays lean).
+serde = { version = "1", features = ["derive"], optional = true }

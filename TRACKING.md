@@ -16,23 +16,23 @@ Each phase is independently shippable and verifiable. Label issues with `phase/N
 - **Good first issue:** port `arith.constant` / `arith.addi` emission from `emit_c`.
 
 ## Phase 2 — Parallelism-extraction pass (the novel insight)
-- [ ] `parallelize.rs` runs after `types::infer_effects`
-- [ ] Detect pure + data-parallel expressions (empty effect row + value types)
-- [ ] Lower to `hvm-core` net OR `scf.parallel` region
-- [ ] Benchmarks: N-body, prefix-scan show linear speedup on core count
+- [x] `parallelize.rs` runs after `types::infer_effects` — `compiler/src/parallel.rs` consumes the `EffectRow` produced by inference (#8)
+- [x] Detect pure + data-parallel expressions — `parallel::analyze` requires empty effect row AND value-typed operands (#9)
+- [ ] Lower to `hvm-core` net OR `scf.parallel` region (#10 — needs `hvm-core`)
+- [ ] Benchmarks: N-body, prefix-scan show linear speedup on core count (#11)
 - [x] **Good first issue (#12):** purity-detection unit tests — `compiler/src/purity.rs` (always-compiled, run by default `cargo test`).
 
 ## Phase 3 — Gradual ownership
 - [x] `ownership.rs`: `own T` / `borrow T` modifiers — `compiler/src/ownership.rs` (always-compiled, with tests)
-- [ ] Region inference pass; GC fallback for unannotated code
-- [ ] FFI + embedded examples compile with explicit ownership
-- **Good first issue:** add `own`/`borrow` to one std container type.
+- [x] Region inference pass; GC fallback for unannotated code — `compiler/src/region.rs` (#14)
+- [ ] FFI + embedded examples compile with explicit ownership (#15)
+- [x] **Good first issue (#16):** add `own`/`borrow` to one std container type — `compiler/src/std_own.rs` (`OwnedVec<T>`).
 
 ## Phase 4 — MCP time-travel server
-- [ ] `axiom-trace` crate: record handler dispatches → deterministic HLC ledger
-- [ ] `rmcp` server with tools: `why_changed`, `replay_from`, `diff_states`
-- [ ] Integration test: agent answers "why did `total` become 1422?"
-- **Good first issue:** add one MCP tool (`list_handlers`) to `axiom-trace`.
+- [x] `axiom-trace` crate: record handler dispatches → deterministic HLC ledger — `axiom-trace/src/lib.rs` (`Ledger`, `HandlerEvent`) with 7 unit tests (#17)
+- [x] `rmcp` server with tools: `why_changed`, `replay_from`, `diff_states` — `axiom-trace/src/mcp.rs` (`--features mcp`, compiles clean) (#18)
+- [x] Integration test: agent answers "why did `total` become 1422?" — `Ledger` scenario + `why_changed`/`diff_states` tests (#19)
+- [x] **Good first issue (#20):** MCP tool `list_handlers` added to `axiom-trace`.
 
 ## Phase 5 — Packaging & epochs
 - [ ] Epoch model: one atomic release (compiler + stdlib + modules)
