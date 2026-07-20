@@ -174,7 +174,10 @@ mod tests {
             .effects()
             .map(|e| format!("{:?}", e))
             .collect();
-        assert_eq!(names, vec!["Audit".to_string(), "Io".to_string(), "Net".to_string()]);
+        // derive(Ord) orders enum variants by declaration order:
+        // Net(0) < Fs(1) < Audit(2) < State(3) < Io(4), so the BTreeSet
+        // iteration is Net, Audit, Io.
+        assert_eq!(names, vec!["Net".to_string(), "Audit".to_string(), "Io".to_string()]);
     }
 
     #[test]

@@ -20,3 +20,9 @@ license = "MIT"
 #   rmcp = { version = "0.1", features = ["server"] }
 #
 # and gate the MCP module behind `#[cfg(feature = "mcp")]`.
+
+[features]
+# Declared so the `#![cfg(feature = "mcp")]` in src/lib.rs is a known
+# feature (silences the `unexpected_cfgs` warning). Enabled together with
+# the rmcp dependency in Phase 4.
+mcp = []
