@@ -20,10 +20,10 @@ Each phase is independently shippable and verifiable. Label issues with `phase/N
 - [ ] Detect pure + data-parallel expressions (empty effect row + value types)
 - [ ] Lower to `hvm-core` net OR `scf.parallel` region
 - [ ] Benchmarks: N-body, prefix-scan show linear speedup on core count
-- **Good first issue:** write purity-detection unit tests for `parallelize.rs`.
+- [x] **Good first issue (#12):** purity-detection unit tests — `compiler/src/purity.rs` (always-compiled, run by default `cargo test`).
 
 ## Phase 3 — Gradual ownership
-- [ ] `ownership.rs`: `own T` / `borrow T` modifiers
+- [x] `ownership.rs`: `own T` / `borrow T` modifiers — `compiler/src/ownership.rs` (always-compiled, with tests)
 - [ ] Region inference pass; GC fallback for unannotated code
 - [ ] FFI + embedded examples compile with explicit ownership
 - **Good first issue:** add `own`/`borrow` to one std container type.
@@ -40,6 +40,6 @@ Each phase is independently shippable and verifiable. Label issues with `phase/N
 - [ ] Catalog of bundled modules (io, json, os, net, ...)
 
 ## Cross-cutting
-- [ ] `axiom doc` renders effect surfaces for supply-chain review
+- [x] `axiom doc` effect-surface **design doc** — `docs/EffectSurface.md` (renderer is a follow-up; see issue #22)
 - [ ] Editor plugins (tree-sitter grammar from Nova's existing one)
-- [ ] CI: build + test on Linux/macOS/Windows
+- [x] CI: build + test on Linux/macOS/Windows — green (run 29764607140)

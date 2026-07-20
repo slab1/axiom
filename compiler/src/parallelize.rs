@@ -1,60 +1,32 @@
 //! Axiom automatic-parallelism pass (Phase 2).
 //!
-//! This is the **starter** for `parallelize.rs` — the novel insight that makes
-//! Axiom surpass Nova. Nova's type-checker *already computes* which code is pure
-//! (empty effect row) but never parallelizes it. This pass consumes that info.
+//! This pass consumes the purity analysis from [`crate::purity`] — the exact
+//! information Nova's type-checker computes via `infer_effects` but never acts
+//! on. This starter shows the decision point; the real lowering to `hvm-core`
+//! (issue #10) lands when the `parallel` feature + `hvm-core` dependency are
+//! wired in (Phase 2, after issue #3-style backend setup).
 //!
 //! Build with: `cargo build -p axiom-compiler --features parallel`
-//! See `TRACKING.md` Phase 2 and issues #8/#9/#10/#11/#12.
+//! See issues #8/#9/#10/#11/#12 and `TRACKING.md` Phase 2.
 #![cfg(feature = "parallel")]
 
-/// A minimal purity predicate over an effect row (the unit this pass operates on).
+use crate::purity::{Effect, EffectRow};
+
+/// Decide whether the expression named `name` with effect `row` should be
+/// auto-parallelized.
 ///
-/// In Nova, an effect row is the set of effects a function may perform
-/// (e.g. `Net`, `Fs`, `Audit`). An **empty** row means the expression is pure
-/// and therefore a candidate for automatic parallel extraction.
-///
-/// This is the exact logic the parallelism pass will use: pure + data-parallel
-/// (value-typed operands) => lower to `hvm-core` net or `scf.parallel`.
-///
-/// See issue #12 (good first issue): extend this with unit tests.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct EffectRow {
-    pub effects: Vec<String>,
+/// Current rule (issue #9/#12): pure rows are parallel-safe. The full rule
+/// also requires value-typed operands so the region pass can split work
+/// without aliasing — that needs type info from `types::`, wired later.
+pub fn should_parallelize(name: &str, row: &EffectRow) -> bool {
+    // `name` is currently informational (used in diagnostics / ledger entries).
+    let _ = name;
+    row.is_parallel_safe()
 }
 
-impl EffectRow {
-    /// True when the row is empty — i.e. the expression has no observable side
-    /// effects and is safe to parallelize.
-    pub fn is_pure(&self) -> bool {
-        self.effects.is_empty()
-    }
-
-    /// True when pure AND every operand is a value type (no references / aliases
-    /// that would force sequential evaluation). Placeholder: real implementation
-    /// reads type info from the type-checker.
-    pub fn is_data_parallel(&self) -> bool {
-        self.is_pure()
-        // && operands are all value types (TODO: wire to types::)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn empty_row_is_pure() {
-        assert!(EffectRow::default().is_pure());
-        assert!(EffectRow::default().is_data_parallel());
-    }
-
-    #[test]
-    fn row_with_effect_is_not_pure() {
-        let row = EffectRow {
-            effects: vec!["Net".to_string()],
-        };
-        assert!(!row.is_pure());
-        assert!(!row.is_data_parallel());
-    }
+/// Convenience: is a row free of the effects that forbid parallelism?
+/// (All effects currently forbid it; this helper exists so the allow-list can
+/// grow in later sub-issues without touching call sites.)
+pub fn forbids_parallel(row: &EffectRow) -> bool {
+    row.effects().any(|e| matches!(e, Effect::Net | Effect::Fs | Effect::Audit | Effect::State | Effect::Io | Effect::Other(_)))
 }

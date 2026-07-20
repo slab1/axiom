@@ -20,7 +20,7 @@ use melior::{
     Context,
     dialect::{arith, func, DialectRegistry},
     ir::{
-        attribute::StringAttribute,
+        attribute::{StringAttribute, TypeAttribute},
         r#type::FunctionType,
         Block, Location, Module, Region, Type,
     },
@@ -102,3 +102,34 @@ mod tests {
         assert!(mlir.contains("i64"), "missing i64 type: {}", mlir);
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TODO(issue #7 — good first issue): port `arith.constant` emission.
+//
+// Second construct to implement, mirroring `emit_add_example`:
+//
+//   fn emit_constant_example() -> Module { ... }
+//
+// emitting roughly:
+//   module {
+//     func.func @seven() -> i64 {
+//       %0 = arith.constant 7 : i64
+//       return %0 : i64
+//     }
+//   }
+//
+// Sketch (melior 0.14 API; verify against the linked MLIR C API):
+//   let i64 = Type::integer(&context, 64);
+//   let c = block.append_operation(arith::constant(
+//       &context,
+//       IntegerAttribute::new(i64, 7).into(),  // value attribute
+//       i64,                                  // result type
+//       location,
+//   ));
+//
+// PREREQUISITE: issue #3 — add `melior` to `compiler/Cargo.toml`
+// (`melior = { version = "0.14", optional = true }`, enable the `mlir`
+// feature) and install LLVM/MLIR 18+ with the C API on the host. Until
+// then this file stays feature-gated and is NOT compiled by the default
+// `cargo check --workspace` (which is why CI is green without LLVM).
+// ─────────────────────────────────────────────────────────────────────────────

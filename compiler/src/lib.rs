@@ -9,6 +9,10 @@ pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
+// Always-compiled, unit-tested core analyses (no external deps):
+pub mod purity; // Phase 2: effect-row purity analysis
+pub mod ownership; // Phase 3: opt-in own T / borrow T markers
+
 // Phase 1: MLIR backend (feature-gated; requires LLVM/MLIR 18+).
 #[cfg(feature = "mlir")]
 pub mod emit_mlir;
