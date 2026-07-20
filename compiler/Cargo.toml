@@ -4,6 +4,15 @@ version = "0.0.0"
 edition = "2024"
 license = "MIT"
 
+[features]
+default = []
+# Phase 1: enable to build the MLIR backend (requires LLVM/MLIR 18+ with C API).
+mlir = ["melior"]
+# Phase 2: enable to build the parallelism pass (requires hvm-core).
+parallel = ["hvm-core"]
+
 [dependencies]
-melior = "0.14"
-hvm-core = "0.2"
+# Phase 1: MLIR emission without a C++ frontend (optional; feature-gated).
+melior = { version = "0.14", optional = true }
+# Phase 2: automatic parallelism via interaction nets (optional; feature-gated).
+hvm-core = { version = "0.2", optional = true }

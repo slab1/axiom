@@ -5,4 +5,14 @@
 //! backend until `emit_mlir.rs` reaches parity.
 //!
 //! See crate root README / TRACKING.md for the phased plan.
-pub fn version() -> &'static str { env!("CARGO_PKG_VERSION") }
+pub fn version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}
+
+// Phase 1: MLIR backend (feature-gated; requires LLVM/MLIR 18+).
+#[cfg(feature = "mlir")]
+pub mod emit_mlir;
+
+// Phase 2: automatic parallelism pass (feature-gated; requires hvm-core).
+#[cfg(feature = "parallel")]
+pub mod parallelize;

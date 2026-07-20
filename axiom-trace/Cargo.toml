@@ -4,5 +4,11 @@ version = "0.0.0"
 edition = "2024"
 license = "MIT"
 
+[features]
+default = []
+# Phase 4: enable to build the MCP time-travel server (requires rmcp).
+mcp = ["rmcp"]
+
 [dependencies]
-rmcp = { version = "0.1", features = ["server", "stdlib"] }
+# Phase 4: MCP time-travel server (optional; feature-gated).
+rmcp = { version = "0.1", features = ["server", "stdlib"], optional = true }

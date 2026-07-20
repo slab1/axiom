@@ -1,26 +1,18 @@
-[package]
-name = "axiom"
-version = "0.0.0"
-edition = "2024"
-description = "Axiom — a systems language with algebraic effects, automatic parallelism, gradual ownership, and MCP time-travel debugging"
-license = "MIT"
-repository = "https://github.com/axiom-lang/axiom"
-
+# Axiom — virtual workspace root.
+#
+# The root is intentionally a *virtual* workspace (no root package) so that
+# `cargo check --workspace` / CI builds cleanly WITHOUT LLVM/MLIR or hvm-core
+# installed. The MLIR and parallelism dependencies live in the `compiler`
+# crate, feature-gated (--features mlir / --features parallel), and rmcp lives
+# in `axiom-trace`. This keeps the default build turnkey for contributors.
 [workspace]
 members = ["compiler", "axiom-trace"]
+resolver = "2"
 
-[dependencies]
-# Phase 1: MLIR emission without a C++ frontend
-melior = "0.14"          # Rust bindings to the MLIR C API (LLVM 18+)
-
-# Phase 2: automatic parallelism via interaction nets
-hvm-core = "0.2"         # HigherOrderCo massively-parallel evaluator
-
-# Phase 4: MCP time-travel server
-rmcp = { version = "0.1", features = ["server", "stdlib"] }
-
-# CLI
-clap = { version = "4", features = ["derive"] }
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/axiom-lang/axiom"
 
 [profile.release]
 opt-level = 3

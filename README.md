@@ -165,10 +165,28 @@ This is independently testable against Nova's test suite and unblocks every late
 ## 7. How to contribute
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). The repo is structured so each Phase maps to a
-crate and a tracking issue. Good first issues:
-- Port one `emit_c` construct to `emit_mlir`.
-- Write a purity-detection test for `parallelize.rs`.
-- Add one MCP tool to `axiom-trace`.
+crate and a tracking issue. **23 tracking issues** are open, labeled by phase
+(`phase/0`…`phase/5`) with `good first issue` entry points — start at
+<https://github.com/axiom-lang/axiom/issues>.
+
+Good first issues:
+- **#7** Port `arith.constant` / `arith.addi` emission into `emit_mlir.rs`.
+- **#12** Write purity-detection unit tests for `parallelize.rs`.
+- **#20** Add the `list_handlers` tool to `axiom-trace`.
+
+### Repo layout (contribution-ready)
+```
+axiom/
+├── README.md            design + build plan
+├── CONTRIBUTING.md      setup, workflow, design principles
+├── TRACKING.md          Phases 0–5 issue checklist
+├── .github/workflows/ci.yml   build+test matrix (Linux/macOS/Windows)
+├── compiler/            forked Nova front-end + emit_mlir.rs / parallelize.rs (feature-gated)
+├── axiom-trace/         MCP time-travel server (feature-gated)
+└── examples/checkout.ax demo: effects, capability, auto-parallel, handler tests
+```
+The workspace is **virtual** — `cargo check --workspace` builds without LLVM/MLIR.
+Enable backends per-phase: `--features mlir`, `--features parallel`, `--features mcp`.
 
 ---
 

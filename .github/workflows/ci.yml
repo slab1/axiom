@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Build & Test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (edition 2024)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      # Phase 1+ requires LLVM/MLIR with the C API.
+      # Until emit_mlir.rs is wired, the workspace still builds without it
+      # because melior is an optional dependency (feature-gated below).
+      - name: Install LLVM/MLIR (Phase 1+)
+        if: false  # enable once emit_mlir is active: ubuntu only for now
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm-18-dev libmlir-18-dev mlir-18-tools
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Check
+        run: cargo check --workspace
+
+      - name: Test
+        run: cargo test --workspace
+
+      - name: Build (release)
+        run: cargo build --workspace --release
