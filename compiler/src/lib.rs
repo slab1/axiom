@@ -15,6 +15,7 @@ pub mod ownership; // Phase 3: opt-in own T / borrow T markers
 pub mod std_own; // Phase 3 (#16): own/bgborrow on a std container
 pub mod parallel; // Phase 2 (#8/#9): auto-parallelism analysis core
 pub mod region; // Phase 3 (#14): region inference + GC fallback
+pub mod epoch; // Phase 5 (#21): epoch model resolver
 
 // Phase 1: MLIR backend (feature-gated; requires LLVM/MLIR 18+).
 #[cfg(feature = "mlir")]

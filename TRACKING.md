@@ -27,6 +27,7 @@ Each phase is independently shippable and verifiable. Label issues with `phase/N
 - [x] Region inference pass; GC fallback for unannotated code — `compiler/src/region.rs` (#14)
 - [ ] FFI + embedded examples compile with explicit ownership (#15)
 - [x] **Good first issue (#16):** add `own`/`borrow` to one std container type — `compiler/src/std_own.rs` (`OwnedVec<T>`).
+- [x] FFI + embedded examples use explicit ownership — `compiler/examples/ffi_own.rs` (runs: `cargo run -p axiom-compiler --example ffi_own`) (#15).
 
 ## Phase 4 — MCP time-travel server
 - [x] `axiom-trace` crate: record handler dispatches → deterministic HLC ledger — `axiom-trace/src/lib.rs` (`Ledger`, `HandlerEvent`) with 7 unit tests (#17)
@@ -35,8 +36,8 @@ Each phase is independently shippable and verifiable. Label issues with `phase/N
 - [x] **Good first issue (#20):** MCP tool `list_handlers` added to `axiom-trace`.
 
 ## Phase 5 — Packaging & epochs
-- [ ] Epoch model: one atomic release (compiler + stdlib + modules)
-- [ ] `axiom.toml` declares epoch; no version resolution
+- [x] Epoch model: one atomic release (compiler + stdlib + modules) — `compiler/src/epoch.rs` resolver + 4 tests (#21)
+- [ ] `axiom.toml` declares epoch; no version resolution (wire `epoch::resolve` into build)
 - [ ] Catalog of bundled modules (io, json, os, net, ...)
 
 ## Cross-cutting
