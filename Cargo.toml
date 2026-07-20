@@ -1,0 +1,27 @@
+[package]
+name = "axiom"
+version = "0.0.0"
+edition = "2024"
+description = "Axiom — a systems language with algebraic effects, automatic parallelism, gradual ownership, and MCP time-travel debugging"
+license = "MIT"
+repository = "https://github.com/axiom-lang/axiom"
+
+[workspace]
+members = ["compiler", "axiom-trace"]
+
+[dependencies]
+# Phase 1: MLIR emission without a C++ frontend
+melior = "0.14"          # Rust bindings to the MLIR C API (LLVM 18+)
+
+# Phase 2: automatic parallelism via interaction nets
+hvm-core = "0.2"         # HigherOrderCo massively-parallel evaluator
+
+# Phase 4: MCP time-travel server
+rmcp = { version = "0.1", features = ["server", "stdlib"] }
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+[profile.release]
+opt-level = 3
+lto = true

@@ -1,0 +1,9 @@
+[package]
+name = "axiom-compiler"
+version = "0.0.0"
+edition = "2024"
+license = "MIT"
+
+[dependencies]
+melior = "0.14"
+hvm-core = "0.2"
