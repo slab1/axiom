@@ -12,7 +12,7 @@ resolver = "2"
 [workspace.package]
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/axiom-lang/axiom"
+repository = "https://github.com/slab1/axiom"
 
 [profile.release]
 opt-level = 3

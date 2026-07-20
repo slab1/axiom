@@ -4,15 +4,29 @@ version = "0.0.0"
 edition = "2024"
 license = "MIT"
 
+# The default build has NO external dependencies so contributors can
+# `cargo check --workspace` / `cargo test` immediately (turnkey).
+#
+# The heavy backends are intentionally NOT declared here yet — they are
+# re-introduced when their phase begins. The starter modules
+# (emit_mlir.rs, parallelize.rs) live behind `#[cfg(feature = "...")]`
+# guards, so they simply don't compile until the dependency is wired in.
+#
+# Phase 1 (issue #7): add the MLIR backend
+#   [dependencies]
+#   melior = { version = "0.14", optional = true }   # Rust MLIR C-API bindings (LLVM 18+)
+#   [features]
+#   mlir = ["melior"]
+#
+# Phase 2 (issue #12): add automatic parallelism
+#   [dependencies]
+#   hvm-core = { version = "0.2", optional = true }    # interaction-net runtime
+#   [features]
+#   parallel = ["hvm-core"]
+
 [features]
 default = []
-# Phase 1: enable to build the MLIR backend (requires LLVM/MLIR 18+ with C API).
-mlir = ["melior"]
-# Phase 2: enable to build the parallelism pass (requires hvm-core).
-parallel = ["hvm-core"]
-
-[dependencies]
-# Phase 1: MLIR emission without a C++ frontend (optional; feature-gated).
-melior = { version = "0.14", optional = true }
-# Phase 2: automatic parallelism via interaction nets (optional; feature-gated).
-hvm-core = { version = "0.2", optional = true }
+# Placeholder flags kept so the cfg-gated starter files keep compiling
+# to `false` by default (no error). Enable alongside the deps above.
+mlir = []
+parallel = []

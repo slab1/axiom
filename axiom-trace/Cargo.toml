@@ -4,11 +4,19 @@ version = "0.0.0"
 edition = "2024"
 license = "MIT"
 
-[features]
-default = []
-# Phase 4: enable to build the MCP time-travel server (requires rmcp).
-mcp = ["rmcp"]
-
-[dependencies]
-# Phase 4: MCP time-travel server (optional; feature-gated).
-rmcp = { version = "0.1", features = ["server", "stdlib"], optional = true }
+# Phase 4 (issue #17/#18/#19/#20): add the MCP time-travel server here.
+#
+# `rmcp` is the Rust MCP SDK. NOTE: as of rmcp 0.1.x the available features
+# are: base64, client, default, default-json-schema, macros, server,
+# transport-child-process, transport-io, transport-sse  (there is NO `stdlib`
+# feature — that was a mistake in the original scaffold and broke CI).
+#
+# We intentionally do NOT declare the rmcp dependency yet: it is only needed
+# once Phase 4 work begins, and keeping it out of the default manifest means
+# `cargo check --workspace` builds with zero external deps (turnkey for
+# contributors). When Phase 4 starts, add:
+#
+#   [dependencies]
+#   rmcp = { version = "0.1", features = ["server"] }
+#
+# and gate the MCP module behind `#[cfg(feature = "mcp")]`.

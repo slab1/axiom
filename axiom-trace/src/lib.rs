@@ -5,7 +5,9 @@
 //! (Claude Code, Cursor, ...). See `TRACKING.md` Phase 4 and issues #17/#18/#19/#20.
 //!
 //! Build with: `cargo build -p axiom-trace --features mcp`
-//! (rmcp is feature-gated so the default workspace builds without it).
+//! (the `rmcp` MCP-SDK dependency is added in Phase 4, issue #17, with the
+//! `server` feature; until then this crate compiles to an empty stub so the
+//! default workspace builds with no external dependencies).
 #![cfg(feature = "mcp")]
 
 pub fn version() -> &'static str {

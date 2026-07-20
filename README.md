@@ -167,7 +167,7 @@ This is independently testable against Nova's test suite and unblocks every late
 See [CONTRIBUTING.md](CONTRIBUTING.md). The repo is structured so each Phase maps to a
 crate and a tracking issue. **23 tracking issues** are open, labeled by phase
 (`phase/0`…`phase/5`) with `good first issue` entry points — start at
-<https://github.com/axiom-lang/axiom/issues>.
+<https://github.com/slab1/axiom/issues>.
 
 Good first issues:
 - **#7** Port `arith.constant` / `arith.addi` emission into `emit_mlir.rs`.
