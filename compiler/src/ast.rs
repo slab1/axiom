@@ -137,6 +137,14 @@ pub struct FunctionDef {
     pub body: Expr,
 }
 
+#[derive(Debug, Clone)]
+pub struct ExternFunctionDef {
+    pub name: String,
+    pub params: Vec<Param>,
+    pub return_type: Option<Type>,
+    pub abi: String,
+}
+
 // ---------------------------------------------------------------------------
 // Module
 // ---------------------------------------------------------------------------
@@ -145,10 +153,11 @@ pub struct FunctionDef {
 #[derive(Debug, Clone)]
 pub struct Module {
     pub functions: Vec<FunctionDef>,
+    pub extern_functions: Vec<ExternFunctionDef>,
 }
 
 impl Module {
     pub fn new(functions: Vec<FunctionDef>) -> Self {
-        Module { functions }
+        Module { functions, extern_functions: Vec::new() }
     }
 }

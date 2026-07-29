@@ -46,12 +46,69 @@ type Result<T> = std::result::Result<T, ParseError>;
 pub fn parse_source(source: &str) -> Result<ast::Module> {
     let mut c = Cursor::new(source);
     let mut functions = Vec::new();
+    let mut extern_functions = Vec::new();
     c.skip_ws_and_comments();
     while c.pos < c.input.len() {
-        functions.push(parse_function(&mut c)?);
+        c.skip_ws_and_comments();
+        if c.rest().starts_with("extern") {
+            extern_functions.push(parse_extern_function(&mut c)?);
+        } else {
+            functions.push(parse_function(&mut c)?);
+        }
         c.skip_ws_and_comments();
     }
-    Ok(ast::Module::new(functions))
+    let mut m = ast::Module::new(functions);
+    m.extern_functions = extern_functions;
+    Ok(m)
+}
+
+fn parse_extern_function(c: &mut Cursor) -> Result<ast::ExternFunctionDef> {
+    c.expect_keyword("extern")?;
+    c.skip_ws_and_comments();
+    let abi = if c.peek() == Some('"') {
+        c.advance();
+        let start = c.pos;
+        while let Some(ch) = c.peek() {
+            if ch == '"' { break; }
+            c.advance();
+        }
+        let abi_str = c.input[start..c.pos].to_string();
+        c.expect_char('"')?;
+        abi_str
+    } else {
+        "C".to_string()
+    };
+
+    c.expect_keyword("fn")?;
+    let name = c.parse_name()?;
+    c.expect_char('(')?;
+
+    let mut params = Vec::new();
+    loop {
+        c.skip_ws_and_comments();
+        if c.peek() == Some(')') { c.advance(); break; }
+        if !params.is_empty() { c.expect_char(',')?; }
+        let pname = c.parse_name()?;
+        c.expect_char(':')?;
+        let ptype = parse_type(c)?;
+        params.push(ast::Param { name: pname, typ: ptype });
+    }
+
+    let return_type = if c.try_char('-') {
+        c.expect_char('>')?;
+        Some(parse_type(c)?)
+    } else {
+        None
+    };
+
+    c.expect_char(';')?;
+
+    Ok(ast::ExternFunctionDef {
+        name,
+        params,
+        return_type,
+        abi,
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -668,6 +725,15 @@ fn fib(n: I64) -> I64 {
         let source = "// comment\nfn seven() -> I64 { 7 }";
         let module = parse_source(source).unwrap();
         assert_eq!(module.functions.len(), 1);
+    }
+
+    #[test]
+    fn parse_extern_decl() {
+        let source = "extern \"C\" fn puts(s: I64) -> I32;";
+        let module = parse_source(source).unwrap();
+        assert_eq!(module.extern_functions.len(), 1);
+        assert_eq!(module.extern_functions[0].name, "puts");
+        assert_eq!(module.extern_functions[0].abi, "C");
     }
 
     #[test]
