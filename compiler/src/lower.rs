@@ -66,7 +66,6 @@ pub fn analyze_module_parallelism(module: &axiom_ir::AxiomModule) -> Vec<(String
             | axiom_ir::Operation::ScfIf(_)
             | axiom_ir::Operation::ScfFor(_)
             | axiom_ir::Operation::ScfYield(_) => true,
-            _ => false,
         });
         (f.name.clone(), is_pure)
     }).collect()
@@ -131,6 +130,7 @@ fn lower_function(f: &ast::FunctionDef) -> Result<axiom_ir::FunctionDef> {
 // Lowering context
 // ---------------------------------------------------------------------------
 
+#[allow(dead_code)]
 struct LowerCtx {
     /// The ops being built for the current block.
     ops: Vec<axiom_ir::Operation>,
@@ -142,6 +142,7 @@ struct LowerCtx {
     next_op_index: usize,
 }
 
+#[allow(dead_code)]
 impl LowerCtx {
     fn new(params: &[axiom_ir::Param]) -> Self {
         let mut vars = HashMap::new();
