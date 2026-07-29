@@ -61,6 +61,7 @@ pub fn analyze_module_parallelism(module: &axiom_ir::AxiomModule) -> Vec<(String
             | axiom_ir::Operation::Subf(_)
             | axiom_ir::Operation::Mulf(_)
             | axiom_ir::Operation::Cmpi(_)
+            | axiom_ir::Operation::Call(_)
             | axiom_ir::Operation::Return(_)
             | axiom_ir::Operation::ScfIf(_)
             | axiom_ir::Operation::ScfFor(_)

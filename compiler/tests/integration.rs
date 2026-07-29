@@ -32,6 +32,17 @@ fn test_parse_and_lower_expressions() {
 }
 
 #[test]
+fn test_agent_optimizer_example() {
+    let path = "../examples/agent_optimizer.ax";
+    let source = std::fs::read_to_string(path).unwrap();
+    let ast_module = ax_parser::parse_source(&source).unwrap();
+    let ir_module = lower::lower_module(&ast_module).unwrap();
+    assert_eq!(ir_module.functions.len(), 2);
+    let parallelism = lower::analyze_module_parallelism(&ir_module);
+    assert!(parallelism.iter().all(|(_, pure)| *pure));
+}
+
+#[test]
 fn test_module_parallelism_analysis() {
     let source = "fn add(a: I64, b: I64) -> I64 { a + b }";
     let ast_module = ax_parser::parse_source(source).unwrap();
