@@ -47,18 +47,24 @@ pub fn parse_source(source: &str) -> Result<ast::Module> {
     let mut c = Cursor::new(source);
     let mut functions = Vec::new();
     let mut extern_functions = Vec::new();
+    let mut structs = Vec::new();
+    let mut enums = Vec::new();
     c.skip_ws_and_comments();
     while c.pos < c.input.len() {
         c.skip_ws_and_comments();
-        if c.rest().starts_with("extern") {
-            extern_functions.push(parse_extern_function(&mut c)?);
-        } else {
-            functions.push(parse_function(&mut c)?);
+        let kw = peek_keyword(&mut c);
+        match kw.as_str() {
+            "extern" => extern_functions.push(parse_extern_function(&mut c)?),
+            "struct" => structs.push(parse_struct_def(&mut c)?),
+            "enum" => enums.push(parse_enum_def(&mut c)?),
+            _ => functions.push(parse_function(&mut c)?),
         }
         c.skip_ws_and_comments();
     }
     let mut m = ast::Module::new(functions);
     m.extern_functions = extern_functions;
+    m.structs = structs;
+    m.enums = enums;
     Ok(m)
 }
 
@@ -409,6 +415,7 @@ fn parse_prefix(c: &mut Cursor) -> Result<Expr> {
                 "if" => parse_if_expr(c),
                 "let" => parse_let_expr(c),
                 "with" => parse_with_expr(c),
+                "match" => parse_match_expr(c),
                 "true" => { consume_keyword(c); Ok(Expr::Bool(true)) }
                 "false" => { consume_keyword(c); Ok(Expr::Bool(false)) }
                 _ => {
@@ -477,6 +484,71 @@ fn parse_if_expr(c: &mut Cursor) -> Result<Expr> {
         None
     };
     Ok(Expr::If(Box::new(cond), Box::new(then_branch), else_branch))
+}
+
+fn parse_struct_def(c: &mut Cursor) -> Result<ast::StructDef> {
+    consume_keyword(c); // "struct"
+    let name = c.parse_name()?;
+    c.expect_char('{')?;
+    let mut fields = Vec::new();
+    loop {
+        c.skip_ws_and_comments();
+        if c.peek() == Some('}') { c.advance(); break; }
+        let fname = c.parse_name()?;
+        c.expect_char(':')?;
+        let ftype = parse_type(c)?;
+        fields.push((fname, ftype));
+        c.try_char(',');
+    }
+    Ok(ast::StructDef { name, fields })
+}
+
+fn parse_enum_def(c: &mut Cursor) -> Result<ast::EnumDef> {
+    consume_keyword(c); // "enum"
+    let name = c.parse_name()?;
+    if c.try_char('[') {
+        while let Some(ch) = c.peek() {
+            if ch == ']' { c.advance(); break; }
+            c.advance();
+        }
+    }
+    c.expect_char('{')?;
+    let mut variants = Vec::new();
+    loop {
+        c.skip_ws_and_comments();
+        if c.peek() == Some('}') { c.advance(); break; }
+        let vname = c.parse_name()?;
+        let mut fields = Vec::new();
+        if c.try_char('(') {
+            loop {
+                c.skip_ws_and_comments();
+                if c.peek() == Some(')') { c.advance(); break; }
+                if !fields.is_empty() { c.expect_char(',')?; }
+                fields.push(parse_type(c)?);
+            }
+        }
+        variants.push(ast::EnumVariant { name: vname, fields });
+        c.try_char(',');
+    }
+    Ok(ast::EnumDef { name, variants })
+}
+
+fn parse_match_expr(c: &mut Cursor) -> Result<Expr> {
+    consume_keyword(c); // "match"
+    let scrutinee = parse_expr(c, 0)?;
+    c.expect_char('{')?;
+    let mut arms = Vec::new();
+    loop {
+        c.skip_ws_and_comments();
+        if c.peek() == Some('}') { c.advance(); break; }
+        let pat = c.parse_name()?;
+        c.expect_char('=')?;
+        c.expect_char('>')?;
+        let body = parse_expr(c, 0)?;
+        arms.push(ast::MatchArm { pattern: pat, body });
+        c.try_char(',');
+    }
+    Ok(Expr::Match(Box::new(scrutinee), arms))
 }
 
 /// Parse `with Effect = effect Effect { op(params) { body } } { expr }`

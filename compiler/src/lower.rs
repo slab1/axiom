@@ -236,6 +236,15 @@ fn lower_expr(expr: &ast::Expr, ctx: &mut LowerCtx) -> Result<axiom_ir::ValueRef
         ast::Expr::Handle(_effect_name, _ops, body) => {
             lower_expr(body, ctx)
         }
+
+        ast::Expr::Match(scrutinee, arms) => {
+            let _scr = lower_expr(scrutinee, ctx)?;
+            if let Some(arm) = arms.first() {
+                lower_expr(&arm.body, ctx)
+            } else {
+                Err(LowerError { message: "empty match expression".into() })
+            }
+        }
     }
 }
 

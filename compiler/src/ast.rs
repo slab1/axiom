@@ -73,6 +73,32 @@ pub enum Expr {
     Call(String, Vec<Expr>),
     /// Effect handler expression: `with Effect = effect Effect { op(args) { body } } { expr }`
     Handle(String, Vec<EffectHandlerOp>, Box<Expr>),
+    /// Match expression: `match expr { pat => body, ... }`
+    Match(Box<Expr>, Vec<MatchArm>),
+}
+
+#[derive(Debug, Clone)]
+pub struct MatchArm {
+    pub pattern: String,
+    pub body: Expr,
+}
+
+#[derive(Debug, Clone)]
+pub struct StructDef {
+    pub name: String,
+    pub fields: Vec<(String, Type)>,
+}
+
+#[derive(Debug, Clone)]
+pub struct EnumVariant {
+    pub name: String,
+    pub fields: Vec<Type>,
+}
+
+#[derive(Debug, Clone)]
+pub struct EnumDef {
+    pub name: String,
+    pub variants: Vec<EnumVariant>,
 }
 
 #[derive(Debug, Clone)]
@@ -154,10 +180,17 @@ pub struct ExternFunctionDef {
 pub struct Module {
     pub functions: Vec<FunctionDef>,
     pub extern_functions: Vec<ExternFunctionDef>,
+    pub structs: Vec<StructDef>,
+    pub enums: Vec<EnumDef>,
 }
 
 impl Module {
     pub fn new(functions: Vec<FunctionDef>) -> Self {
-        Module { functions, extern_functions: Vec::new() }
+        Module {
+            functions,
+            extern_functions: Vec::new(),
+            structs: Vec::new(),
+            enums: Vec::new(),
+        }
     }
 }
