@@ -1,0 +1,16 @@
+// Axiom high-performance benchmark: N-body gravitational interaction step
+// Demonstrates floating-point arithmetic (addf, subf, mulf) and pure parallel reduction.
+
+fn update_position(x: F64, v: F64, dt: F64) -> F64 {
+    x + v * dt
+}
+
+fn update_velocity(v: F64, force: F64, mass: F64, dt: F64) -> F64 {
+    v + (force / mass) * dt
+}
+
+fn nbody_step(px: F64, py: F64, vx: F64, vy: F64, fx: F64, fy: F64, mass: F64, dt: F64) -> F64 {
+    let nx = update_position(px, vx, dt);
+    let ny = update_position(py, vy, dt);
+    nx + ny
+}

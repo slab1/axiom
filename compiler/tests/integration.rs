@@ -1,7 +1,7 @@
 //! End-to-end integration tests for the Axiom compiler.
 //!
 //! Tests parsing expression-based Axiom source code, lowering to Axiom IR,
-//! and (when `--features mlir` is enabled) emitting and verifying MLIR code.
+//! and (when `--features mlir` is enabled) emitting, verifying, and JIT-executing code.
 
 use axiom_compiler::ax_parser;
 use axiom_compiler::lower;
@@ -60,4 +60,29 @@ fn test_mlir_emission_expressions() {
         let mlir_module = emit_mlir::emit_module(&context, &ir_module, false);
         assert!(mlir_module.as_operation().verify(), "MLIR module verification failed for source '{source}'");
     }
+}
+
+#[cfg(feature = "mlir")]
+#[test]
+fn test_jit_execution_source() {
+    use melior::{
+        Context,
+        dialect::{DialectRegistry},
+        utility::register_all_dialects,
+    };
+    use axiom_compiler::jit;
+
+    let context = Context::new();
+    let registry = DialectRegistry::new();
+    register_all_dialects(&registry);
+    context.append_dialect_registry(&registry);
+    context.load_all_available_dialects();
+
+    let source = "fn add(a: I64, b: I64) -> I64 { a + b }";
+    let ast_module = ax_parser::parse_source(source).unwrap();
+    let ir_module = lower::lower_module(&ast_module).unwrap();
+
+    let engine = unsafe { jit::jit_compile(&context, &ir_module, 2).unwrap() };
+    let results = unsafe { jit::exec_fn_i64(&engine, "add", &[15, 27], 1).unwrap() };
+    assert_eq!(results, vec![42]);
 }
