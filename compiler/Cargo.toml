@@ -26,7 +26,20 @@ license = "MIT"
 
 [features]
 default = []
-# Placeholder flags kept so the cfg-gated starter files keep compiling
-# to `false` by default (no error). Enable alongside the deps above.
-mlir = []
-parallel = []
+# Phase 1: enable to build the MLIR backend. Requires LLVM/MLIR 18+ with
+# the C API on the system; point MLIR_DIR / LLVM_DIR at the cmake
+# configs (see the `melior` dep note below).
+mlir = ["dep:melior"]
+# Phase 2: enable to build the parallelism pass (requires hvm-core).
+parallel = ["dep:hvm-core"]
+
+[dependencies]
+# Phase 1: MLIR emission without a C++ frontend (optional; feature-gated).
+# melior 0.14 binds the MLIR C API; its build needs LLVM/MLIR 18+
+# with the C API (libMLIRCAPI*.a + mlir-c/ headers). On Ubuntu:
+#   apt-get install -y llvm-18-dev libmlir-18-dev
+#   export MLIR_DIR=/usr/lib/llvm-18/lib/cmake/mlir
+#   export LLVM_DIR=/usr/lib/llvm-18/lib/cmake/llvm
+melior = { version = "0.14", optional = true }
+# Phase 2: automatic parallelism via interaction nets (optional; feature-gated).
+hvm-core = { version = "0.2", optional = true }
