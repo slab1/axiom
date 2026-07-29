@@ -130,19 +130,15 @@ fn lower_function(f: &ast::FunctionDef) -> Result<axiom_ir::FunctionDef> {
 // Lowering context
 // ---------------------------------------------------------------------------
 
-#[allow(dead_code)]
 struct LowerCtx {
     /// The ops being built for the current block.
     ops: Vec<axiom_ir::Operation>,
     /// Variable name → ValueRef map.
     vars: HashMap<String, axiom_ir::ValueRef>,
-    /// Next temporary index.
-    temp_counter: usize,
     /// Next op index for this block.
     next_op_index: usize,
 }
 
-#[allow(dead_code)]
 impl LowerCtx {
     fn new(params: &[axiom_ir::Param]) -> Self {
         let mut vars = HashMap::new();
@@ -152,23 +148,8 @@ impl LowerCtx {
         LowerCtx {
             ops: Vec::new(),
             vars,
-            temp_counter: 0,
             next_op_index: 0,
         }
-    }
-
-    /// Generate a fresh temporary name.
-    fn fresh_temp(&mut self) -> String {
-        let n = self.temp_counter;
-        self.temp_counter += 1;
-        format!("%{n}")
-    }
-
-    /// Allocate the next op index without emitting anything.
-    fn reserve_op(&mut self) -> usize {
-        let idx = self.next_op_index;
-        self.next_op_index += 1;
-        idx
     }
 
     /// Emit an operation that produces a result, returning its ValueRef.
@@ -443,7 +424,6 @@ fn lower_branch(
     let mut branch_ctx = LowerCtx {
         ops: Vec::new(),
         vars: parent_ctx.vars.clone(), // inherit parent scope
-        temp_counter: 0,
         next_op_index: 0,
     };
 
