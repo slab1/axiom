@@ -1,7 +1,8 @@
 //! End-to-end integration tests for the Axiom compiler.
 //!
 //! Tests parsing expression-based Axiom source code, lowering to Axiom IR,
-//! and (when `--features mlir` is enabled) emitting, verifying, and JIT-executing code.
+//! purity/parallelism analysis, and (when `--features mlir` is enabled) emitting,
+//! verifying, and JIT-executing code.
 
 use axiom_compiler::ax_parser;
 use axiom_compiler::lower;
@@ -28,6 +29,15 @@ fn test_parse_and_lower_expressions() {
 
         assert!(!ir_module.functions.is_empty(), "IR module should have functions for source '{source}'");
     }
+}
+
+#[test]
+fn test_module_parallelism_analysis() {
+    let source = "fn add(a: I64, b: I64) -> I64 { a + b }";
+    let ast_module = ax_parser::parse_source(source).unwrap();
+    let ir_module = lower::lower_module(&ast_module).unwrap();
+    let parallelism = lower::analyze_module_parallelism(&ir_module);
+    assert_eq!(parallelism, vec![("add".to_string(), true)]);
 }
 
 #[cfg(feature = "mlir")]

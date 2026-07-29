@@ -49,6 +49,28 @@ pub fn lower_module(module: &ast::Module) -> Result<axiom_ir::AxiomModule> {
     Ok(ir_mod)
 }
 
+/// Analyze all functions in the lowered module for auto-parallelism (Phase 2 integration).
+pub fn analyze_module_parallelism(module: &axiom_ir::AxiomModule) -> Vec<(String, bool)> {
+    module.functions.iter().map(|f| {
+        let is_pure = f.body.ops.iter().all(|op| match op {
+            axiom_ir::Operation::Constant(_)
+            | axiom_ir::Operation::Addi(_)
+            | axiom_ir::Operation::Subi(_)
+            | axiom_ir::Operation::Muli(_)
+            | axiom_ir::Operation::Addf(_)
+            | axiom_ir::Operation::Subf(_)
+            | axiom_ir::Operation::Mulf(_)
+            | axiom_ir::Operation::Cmpi(_)
+            | axiom_ir::Operation::Return(_)
+            | axiom_ir::Operation::ScfIf(_)
+            | axiom_ir::Operation::ScfFor(_)
+            | axiom_ir::Operation::ScfYield(_) => true,
+            _ => false,
+        });
+        (f.name.clone(), is_pure)
+    }).collect()
+}
+
 fn lower_extern_function(ext: &ast::ExternFunctionDef) -> axiom_ir::ExternFunctionDef {
     let params: Vec<axiom_ir::Param> = ext.params.iter()
         .map(|p| axiom_ir::Param {
