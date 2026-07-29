@@ -292,6 +292,14 @@ pub struct FunctionDef {
     pub body: Block,
 }
 
+#[derive(Debug, Clone)]
+pub struct ExternFunctionDef {
+    pub name: String,
+    pub params: Vec<Param>,
+    pub return_types: Vec<Type>,
+    pub abi: String,
+}
+
 /// A function parameter.
 #[derive(Debug, Clone)]
 pub struct Param {
@@ -307,11 +315,12 @@ pub struct Param {
 #[derive(Debug, Clone)]
 pub struct AxiomModule {
     pub functions: Vec<FunctionDef>,
+    pub extern_functions: Vec<ExternFunctionDef>,
 }
 
 impl AxiomModule {
     pub fn new(functions: Vec<FunctionDef>) -> Self {
-        AxiomModule { functions }
+        AxiomModule { functions, extern_functions: Vec::new() }
     }
 }
 

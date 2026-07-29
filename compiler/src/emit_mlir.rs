@@ -37,12 +37,48 @@ pub fn emit_module<'c>(context: &'c Context, module: &axiom_ir::AxiomModule, emi
     let location = Location::unknown(context);
     let output = Module::new(location);
 
+    for ext in &module.extern_functions {
+        let operation = emit_extern_function(context, ext, location);
+        output.body().append_operation(operation);
+    }
+
     for func_def in &module.functions {
         let operation = emit_function(context, func_def, emit_c_interface, location);
         output.body().append_operation(operation);
     }
 
     output
+}
+
+fn emit_extern_function<'c>(
+    context: &'c Context,
+    ext: &axiom_ir::ExternFunctionDef,
+    location: Location<'c>,
+) -> melior::ir::Operation<'c> {
+    let input_types: Vec<Type<'c>> = ext
+        .params
+        .iter()
+        .map(|p| convert_type(context, &p.typ))
+        .collect();
+    let output_types: Vec<Type<'c>> = ext
+        .return_types
+        .iter()
+        .map(|t| convert_type(context, t))
+        .collect();
+
+    let function_type = FunctionType::new(context, &input_types, &output_types);
+    let region = Region::new(); // empty region = external function declaration
+
+    let attrs = vec![];
+
+    func::func(
+        context,
+        StringAttribute::new(context, &ext.name),
+        TypeAttribute::new(function_type.into()),
+        region,
+        &attrs,
+        location,
+    )
 }
 
 // ---------------------------------------------------------------------------

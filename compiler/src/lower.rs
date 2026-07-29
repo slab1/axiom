@@ -40,7 +40,34 @@ pub fn lower_module(module: &ast::Module) -> Result<axiom_ir::AxiomModule> {
     for f in &module.functions {
         functions.push(lower_function(f)?);
     }
-    Ok(axiom_ir::AxiomModule::new(functions))
+    let mut extern_functions = Vec::new();
+    for ext in &module.extern_functions {
+        extern_functions.push(lower_extern_function(ext));
+    }
+    let mut ir_mod = axiom_ir::AxiomModule::new(functions);
+    ir_mod.extern_functions = extern_functions;
+    Ok(ir_mod)
+}
+
+fn lower_extern_function(ext: &ast::ExternFunctionDef) -> axiom_ir::ExternFunctionDef {
+    let params: Vec<axiom_ir::Param> = ext.params.iter()
+        .map(|p| axiom_ir::Param {
+            name: p.name.clone(),
+            typ: ast::to_core_type(&p.typ),
+        })
+        .collect();
+
+    let return_types = match &ext.return_type {
+        Some(t) => vec![ast::to_core_type(t)],
+        None => vec![],
+    };
+
+    axiom_ir::ExternFunctionDef {
+        name: ext.name.clone(),
+        params,
+        return_types,
+        abi: ext.abi.clone(),
+    }
 }
 
 // ---------------------------------------------------------------------------
