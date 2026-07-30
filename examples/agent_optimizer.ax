@@ -1,0 +1,11 @@
+// examples/agent_optimizer.ax — small pure functions used by integration test
+
+// Two small pure functions so the compiler's parallelism analysis finds them pure.
+fn opt_step(a: I64, b: I64) -> I64 {
+    a + b
+}
+
+fn optimize(x: I64) -> I64 {
+    let y = x * 2
+    y
+}
