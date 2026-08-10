@@ -20,9 +20,10 @@ fn main() {
     }
 
     match args[1].as_str() {
-        "compile" => cmd_compile(prog, &args[1..]),
-        "build" => cmd_build(prog, &args[1..]),
-        "emit" => cmd_emit(prog, &args[1..]),
+        // Skip both prog and the subcommand: cmd_* receive only their own flags.
+        "compile" => cmd_compile(prog, &args[2..]),
+        "build" => cmd_build(prog, &args[2..]),
+        "emit" => cmd_emit(prog, &args[2..]),
         "--help" | "-h" | "help" => print_usage(prog),
         "--version" | "-V" => println!("axiom-compiler v{}", axiom_compiler::version()),
         _ => {
@@ -91,6 +92,7 @@ fn cmd_compile(prog: &str, args: &[String]) {
     let mut backend = "c";
     let mut file: Option<String> = None;
     let mut run_mode = false;
+    let mut run_args: Vec<i64> = Vec::new();
 
     let mut i = 0;
     while i < args.len() {
@@ -107,7 +109,18 @@ fn cmd_compile(prog: &str, args: &[String]) {
                 run_mode = true;
             }
             s if !s.starts_with('-') => {
-                file = Some(s.to_string());
+                // First positional arg is the source file; any further
+                // positional args are function arguments for `--run`.
+                match &file {
+                    None => file = Some(s.to_string()),
+                    Some(_) => match s.parse::<i64>() {
+                        Ok(v) => run_args.push(v),
+                        Err(_) => {
+                            eprintln!("error: invalid run argument '{s}' (expected integer)");
+                            process::exit(1);
+                        }
+                    },
+                }
             }
             _ => {
                 eprintln!("error: unknown flag '{}'", args[i]);
@@ -160,7 +173,7 @@ fn cmd_compile(prog: &str, args: &[String]) {
 
     // Emit or run for the selected backend
     match (backend, run_mode) {
-        ("mlir", true) => run_mlir_backend(&ir_module),
+        ("mlir", true) => run_mlir_backend(&ir_module, &run_args),
         ("mlir", false) => emit_mlir_backend(&ir_module),
         ("c", _) => {
             eprintln!("error: C backend not yet implemented (fallback from Nova)");
@@ -207,7 +220,7 @@ fn emit_mlir_backend(_module: &axiom_compiler::axiom_ir::AxiomModule) {
 // ---------------------------------------------------------------------------
 
 #[cfg(feature = "mlir")]
-fn run_mlir_backend(module: &axiom_compiler::axiom_ir::AxiomModule) {
+fn run_mlir_backend(module: &axiom_compiler::axiom_ir::AxiomModule, run_args: &[i64]) {
     let context = melior::Context::new();
     let registry = melior::dialect::DialectRegistry::new();
     melior::utility::register_all_dialects(&registry);
@@ -237,7 +250,9 @@ fn run_mlir_backend(module: &axiom_compiler::axiom_ir::AxiomModule) {
 
     eprintln!("Running @{name}({num_params} args → {num_results} results)...");
 
-    let args = vec![0i64; num_params];
+    // Pad or truncate the provided run args to the function's arity.
+    let mut args = run_args.to_vec();
+    args.resize(num_params, 0i64);
     let results = match unsafe { axiom_compiler::jit::exec_fn_i64(&engine, name, &args, num_results) }
     {
         Ok(r) => r,
@@ -255,7 +270,7 @@ fn run_mlir_backend(module: &axiom_compiler::axiom_ir::AxiomModule) {
 }
 
 #[cfg(not(feature = "mlir"))]
-fn run_mlir_backend(_module: &axiom_compiler::axiom_ir::AxiomModule) {
+fn run_mlir_backend(_module: &axiom_compiler::axiom_ir::AxiomModule, _run_args: &[i64]) {
     eprintln!("error: MLIR backend not available (--run requires --features mlir)");
     eprintln!("  Build with: cargo build --features mlir");
     process::exit(1);
