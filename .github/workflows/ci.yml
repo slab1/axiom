@@ -69,7 +69,8 @@ jobs:
       - name: Install LLVM 17 + LLVM 18/MLIR (C API)
         run: |
           sudo apt-get update
-          sudo apt-get install -y llvm-17-dev llvm-18-dev libmlir-18-dev mlir-18-tools
+          sudo apt-get install -y llvm-17-dev llvm-18-dev libmlir-18-dev mlir-18-tools \
+            libpolly-17-dev libpolly-18-dev
 
       - name: Cache cargo
         uses: actions/cache@v4
