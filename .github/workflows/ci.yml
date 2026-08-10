@@ -52,6 +52,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TABLEGEN_170_PREFIX: /usr/lib/llvm-17
+      # mlir-sys build.rs looks up MLIR_SYS_{MAJOR}0_PREFIX (no underscore
+      # between major and 0) to find llvm-config; wrong/absent var is
+      # silently ignored -> "failed to find correct version (18.x.x)".
+      MLIR_SYS_180_PREFIX: /usr/lib/llvm-18
     steps:
       - uses: actions/checkout@v4
 
