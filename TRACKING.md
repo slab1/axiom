@@ -29,6 +29,10 @@
 - TRACKING.md updated for all closed issues.
 - LLVM 17 + 18 co-installed (llvm-17-dev + libmlir-18-dev); tblgen finds LLVM 17, mlir-sys finds LLVM 18.
 - melior 0.14 + melior-macro 0.8.1 + tblgen 0.3.0 compile cleanly for `--features mlir`.
+- CI FULLY GREEN on HEAD (all 3 OS default jobs + test-mlir job, zero warnings):
+  - Default: 60 tests (50 unit + 3 parse + 7 trace). --features mlir: 71 tests (58 unit + 6 integration + 7 trace) + release build, on ubuntu with LLVM 17+18.
+  - Env-var gotchas: `TABLEGEN_170_PREFIX=/usr/lib/llvm-17` AND `MLIR_SYS_180_PREFIX=/usr/lib/llvm-18` (no underscore between major and 0); `libpolly-17-dev libpolly-18-dev` needed for melior-macro link.
+  - crates.io melior 0.14.0 is broken (missing melior-macro macros + MLIR 18 API mismatch) — vendored patched copy in `vendor/melior/` via `[patch.crates-io]`; see `vendor/melior/README.md`.
 - Issue #4 (emit func+arith+scf): axiom_ir.rs built (ValueRef, Operation, Block, FunctionDef, Type), emit_mlir.rs rewritten to walk IR and emit func/arith/scf via melior.
 - Issue #7 (arith.constant): included in emission pipeline (used by constant_seven example).
 - Issue #5 (--backend mlir CLI flag): `src/main.rs` binary target with `compile` and `emit` subcommands; `src/ax_parser.rs` text parser converting `.ax` files to AxiomIR; full pipeline: `.ax` → parse → AxiomIR → emit MLIR output. Example `.ax` files in `examples/`.
