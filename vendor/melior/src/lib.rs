@@ -1,4 +1,8 @@
 #![doc = include_str!("../README.md")]
+// Newer rustc lints `mismatched_lifetime_syntaxes` (elided vs named lifetimes
+// in signatures) for all of melior 0.14's API. Vendored code — silence it
+// here rather than editing 20 upstream signatures.
+#![allow(mismatched_lifetime_syntaxes)]
 
 extern crate self as melior;
 
