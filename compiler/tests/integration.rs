@@ -85,6 +85,68 @@ fn test_mlir_emission_expressions() {
 
 #[cfg(feature = "mlir")]
 #[test]
+fn test_mlir_emission_dumps_text() {
+    // End-to-end: .ax source -> parse -> lower -> emit -> dump text.
+    // Asserts the dumped MLIR contains the expected func + arith/scf ops,
+    // proving the emission pipeline produces real, human-readable IR.
+    use melior::{
+        Context,
+        dialect::DialectRegistry,
+        utility::register_all_dialects,
+    };
+    use axiom_compiler::emit_mlir;
+
+    let context = Context::new();
+    let registry = DialectRegistry::new();
+    register_all_dialects(&registry);
+    context.append_dialect_registry(&registry);
+    context.load_all_available_dialects();
+
+    let cases = [
+        (
+            "fn add(a: I64, b: I64) -> I64 { a + b }",
+            "@add",
+            "arith.addi",
+        ),
+        (
+            "fn max(a: I64, b: I64) -> I64 { if a > b { a } else { b } }",
+            "@max",
+            "scf.if",
+        ),
+        (
+            "fn mul3(x: I64) -> I64 { let y = x * 3; y }",
+            "@mul3",
+            "arith.muli",
+        ),
+        (
+            "fn sub(a: I64, b: I64) -> I64 { a - b }",
+            "@sub",
+            "arith.subi",
+        ),
+        (
+            "fn five() -> I64 { 5 }",
+            "@five",
+            "arith.constant",
+        ),
+    ];
+
+    for (source, func_name, expected_op) in cases {
+        let ast_module = ax_parser::parse_source(source)
+            .unwrap_or_else(|e| panic!("parse failed for '{source}': {e}"));
+        let ir_module = lower::lower_module(&ast_module)
+            .unwrap_or_else(|e| panic!("lower failed for '{source}': {e}"));
+        let mlir_module = emit_mlir::emit_module(&context, &ir_module, false);
+        assert!(mlir_module.as_operation().verify());
+
+        let text = format!("{}", mlir_module.as_operation());
+        assert!(text.contains("func.func"), "expected func.func in dumped MLIR");
+        assert!(text.contains(func_name), "missing {func_name} in dumped MLIR: {text}");
+        assert!(text.contains(expected_op), "missing {expected_op} in dumped MLIR: {text}");
+    }
+}
+
+#[cfg(feature = "mlir")]
+#[test]
 fn test_jit_execution_source() {
     use melior::{
         Context,
