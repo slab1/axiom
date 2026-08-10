@@ -12,8 +12,9 @@ workspace wires it in via `[patch.crates-io]` in `Cargo.toml`.
    `sparse_tensor_passes!` / `transform_passes!` — macros that **do not exist**
    in melior-macro 0.8.1. `pub mod conversion` also fails because mlir-sys
    bindings against MLIR 18 lack `mlirCreateConversionConvertLinalgToLLVMPass`.
-2. `src/string_ref.rs` — MLIR 18 changed `MlirStringRef.data` to `*const u8`
-   (was `*const i8` in 17); melior 0.14 was written for the 17 signature.
+2. `src/string_ref.rs` — MLIR 18 changed `MlirStringRef.data` from `*const i8`
+   to `c_char` (which is `u8` on aarch64/Termux but `i8` on x86_64 Ubuntu).
+   Patch casts to `c_char` so it compiles on both targets.
 3. `src/dialect/llvm/type.rs` — MLIR 18 changed `mlirLLVMPointerTypeGet` to
    take a `MlirContext` (not `MlirType`); patched to the 18 signature.
 
@@ -22,7 +23,7 @@ workspace wires it in via `[patch.crates-io]` in `Cargo.toml`.
 | File | Change |
 |------|--------|
 | `src/pass.rs` | Comment out `async`, `conversion`, `gpu`, `linalg`, `sparse_tensor`, `transform` modules |
-| `src/string_ref.rs` | `*const i8` → `*const u8` |
+| `src/string_ref.rs` | `MlirStringRef.data` cast uses `c_char` (u8 on aarch64, i8 on x86_64) |
 | `src/dialect/llvm/type.rs` | `pointer()` takes `&Context` + address_space; calls `mlirLLVMPointerTypeGet(context, ..)` |
 
 ## How to re-vendor (if upgrading)

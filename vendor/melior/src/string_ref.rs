@@ -1,6 +1,6 @@
 use mlir_sys::{mlirStringRefEqual, MlirStringRef};
 use std::{
-    ffi::CStr,
+    ffi::{c_char, CStr},
     marker::PhantomData,
     slice,
     str::{self, Utf8Error},
@@ -21,7 +21,7 @@ impl<'a> StringRef<'a> {
     /// Creates a string reference.
     pub fn new(string: &'a str) -> Self {
         let string = MlirStringRef {
-            data: string.as_bytes().as_ptr() as *const u8,
+            data: string.as_bytes().as_ptr() as *const c_char,
             length: string.len(),
         };
 
