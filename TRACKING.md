@@ -57,23 +57,24 @@
 - Extend `ax_parser.rs` with more ops (scf.for, scf.while, arith.mulf, arith.subf).
 - Extend `emit_mlir.rs` `build_scf_region` to support subi/muli/addf inside scf.if blocks (currently falls back to placeholder constants).
 - Create end-to-end integration tests that emit MLIR, round-trip verify, and dump the MLIR text.
-- Update CI to build + test with `--features mlir` on ubuntu (enable the LLVM install step).
+- Update CI to build + test with `--features mlir` on ubuntu (DONE 2026-08-10: test-mlir job enabled — installs llvm-17-dev + llvm-18-dev + libmlir-18-dev, sets TABLEGEN_170_PREFIX, runs `cargo test --features mlir`).
 
 ## Critical Context
 - Repo: https://github.com/slab1/axiom (public). Local: /tmp/opencode/axiom-lang.
 - Push pattern: git remote set-url origin "https://${TOKEN}@github.com/slab1/axiom.git" && git push -u origin main then reset to token-free URL.
 - Local Rust: source "$HOME/.cargo/env" to get cargo on PATH.
 - LLVM paths: /usr/lib/llvm-18/{include/mlir-c, lib/libMLIRCAPI*.a, lib/libMLIR.so, lib/cmake/mlir/MLIRConfig.cmake, lib/cmake/llvm/LLVMConfig.cmake}. Extra: libpolly-18-dev now installed for linking.
-- Build for --features mlir:
+- Build for --features mlir (NOTE: env var is TABLEGEN_170_PREFIX — NO underscore between 17 and 0; tblgen 0.3.0 reads `TABLEGEN_{MAJOR}0_PREFIX`):
   ```
   source "$HOME/.cargo/env"
   export PATH="/usr/lib/llvm-17/bin:$PATH"
-  export TABLEGEN_17_0_PREFIX=/usr/lib/llvm-17
+  export TABLEGEN_170_PREFIX=/usr/lib/llvm-17
   export MLIR_DIR=/usr/lib/llvm-18/lib/cmake/mlir
   export LLVM_DIR=/usr/lib/llvm-18/lib/cmake/llvm
   cargo build -p axiom-compiler --features mlir
   ```
-- Test counts: 46 local (33 default + 8 ax_parser + 5 emit_mlir). Works with `cargo test -p axiom-compiler --features mlir`.
+  Replace: `.cargo/config.toml` sets TABLEGEN_170_PREFIX for local builds (git-tracked).
+- Test counts: 71 with `--features mlir` (58 unit + 6 integration + 7 trace); default `cargo test` = 60 (50 unit + 3 parse + 7 trace). Works with `cargo test -p axiom-compiler --features mlir`.
 - melior 0.14: tblgen 0.3.0 (LLVM 17) + mlir-sys 0.2.2 (LLVM 18) + melior 0.14. Build needs PATH with llvm-17/bin first + env vars.
 - Issue status: CLOSED #3,#4,#5,#7,#8,#9,#12,#13,#14,#15,#16,#17,#18,#19,#20,#21,#22,#23 (18). OPEN #1,#2,#6,#10,#11 (5 open).
 - Nova reference clone: /tmp/opencode/nova-src.

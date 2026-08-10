@@ -35,7 +35,7 @@ impl<T> OwnedVec<T> {
 
     /// Hand out a borrowed, read-only view. Safe: the buffer is owned here,
     /// so the borrow cannot race with mutation at this site.
-    pub fn view(&self) -> Borrow<Vec<T>> {
+    pub fn view(&self) -> Borrow<'_, Vec<T>> {
         Borrow::new(&self.buf.0)
     }
 

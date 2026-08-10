@@ -1,0 +1,9 @@
+# Local build configuration for the MLIR feature path.
+#
+# tblgen 0.3.0 (used by melior-macro 0.8.1, feature llvm17-0) locates its
+# llvm-config via the TABLEGEN_{MAJOR}0_PREFIX env var. For LLVM major 17
+# that is TABLEGEN_170_PREFIX (NO underscore between 17 and 0).
+#
+# Install on Ubuntu:  sudo apt-get install -y llvm-17-dev llvm-18-dev libmlir-18-dev
+[env]
+TABLEGEN_170_PREFIX = "/usr/lib/llvm-17"

@@ -1,0 +1,20 @@
+// Axiom System Tool: Agent Task Performance Optimizer
+// Demonstrates effect signatures (~ Telemetry), pure calculations, and conditional scoring.
+
+fn calculate_efficiency(task_duration: I64, error_count: I64, base_score: I64) -> I64 {
+    let penalty = error_count * 10;
+    let speed = 100 - task_duration;
+    let score = base_score + speed - penalty;
+    if score > 0 {
+        score
+    } else {
+        0
+    }
+}
+
+fn main() -> I64 {
+    let duration = 12;
+    let errors = 0;
+    let baseline = 500;
+    calculate_efficiency(duration, errors, baseline)
+}

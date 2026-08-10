@@ -1,0 +1,10 @@
+// Axiom example: return the maximum of two integers
+fn max(a: I64, b: I64) -> I64 {
+    %cmp = cmpi sgt %a, %b
+    %r = if %cmp -> I64 {
+        yield %a
+    } else {
+        yield %b
+    }
+    ret %r
+}

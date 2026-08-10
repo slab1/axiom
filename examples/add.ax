@@ -1,0 +1,5 @@
+// Axiom example: add two integers
+fn add(a: I64, b: I64) -> I64 {
+    %r = addi %a, %b
+    ret %r
+}

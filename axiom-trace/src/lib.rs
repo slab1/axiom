@@ -72,15 +72,14 @@ impl Ledger {
     pub fn replay_from(&self, var: &str, tick: u64) -> Option<i64> {
         self.events
             .iter()
-            .filter(|e| e.hlc <= tick && e.produced == var)
-            .last()
+            .rfind(|e| e.hlc <= tick && e.produced == var)
             .map(|e| e.value)
     }
 
     /// Issue #18 (`why_changed`): the event that produced `var`'s final
     /// value. The core answer to *"why did `total` become 1422?"*.
     pub fn why_changed(&self, var: &str) -> Option<&HandlerEvent> {
-        self.events.iter().filter(|e| e.produced == var).last()
+        self.events.iter().rfind(|e| e.produced == var)
     }
 
     /// Issue #18 (`diff_states`): value of `var` at two ticks, so a caller

@@ -4,6 +4,15 @@ version = "0.0.0"
 edition = "2024"
 license = "MIT"
 
+# Binary target for the compiler CLI.
+# Run with: cargo run -p axiom-compiler -- compile --backend mlir examples/filename.ax
+[[bin]]
+name = "axiom"
+path = "src/main.rs"
+# The binary requires the library, so `cargo build -p axiom-compiler` also builds
+# the `axiom` binary. When `--features mlir` is enabled, the MLIR backend is available.
+required-features = []
+
 # The default build has NO external dependencies so contributors can
 # `cargo check --workspace` / `cargo test` immediately (turnkey).
 #
@@ -29,7 +38,7 @@ default = []
 # Phase 1: enable to build the MLIR backend. Requires LLVM/MLIR 18+ with
 # the C API on the system; point MLIR_DIR / LLVM_DIR at the cmake
 # configs (see the `melior` dep note below).
-mlir = ["dep:melior"]
+mlir = ["dep:melior", "dep:mlir-sys"]
 # Phase 2: enable to build the parallelism pass (requires hvm-core).
 parallel = ["dep:hvm-core"]
 
@@ -41,5 +50,7 @@ parallel = ["dep:hvm-core"]
 #   export MLIR_DIR=/usr/lib/llvm-18/lib/cmake/mlir
 #   export LLVM_DIR=/usr/lib/llvm-18/lib/cmake/llvm
 melior = { version = "0.14", optional = true }
+# MLIR C API types for JIT/pass pipeline (required by jit.rs).
+mlir-sys = { version = "0.2", optional = true }
 # Phase 2: automatic parallelism via interaction nets (optional; feature-gated).
 hvm-core = { version = "0.2", optional = true }

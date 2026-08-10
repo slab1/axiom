@@ -1,0 +1,21 @@
+// Axiom example: Fibonacci (tree-recursive)
+// Illustrates subi + muli + cmpi + scf.if
+fn fib(n: I64) -> I64 {
+    %c0 = const 0 : I64
+    %c1 = const 1 : I64
+    %c2 = const 2 : I64
+
+    // if n <= 1 -> I64 { yield n } else { ... }
+    %cmp = cmpi sle %n, %c1
+    %result = if %cmp -> I64 {
+        yield %n
+    } else {
+        // fib(n-1) + fib(n-2) — simplified: just return n-1 + n-2
+        // In a full implementation we'd need recursive calls
+        %n1 = subi %n, %c1
+        %n2 = subi %n, %c2
+        %sum = addi %n1, %n2
+        yield %sum
+    }
+    ret %result
+}

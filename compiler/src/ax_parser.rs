@@ -215,7 +215,7 @@ impl<'a> Cursor<'a> {
         if self.rest().starts_with(kw) {
             // Check that the keyword is not followed by more alphanumeric chars
             let after = &self.rest()[kw.len()..];
-            if after.chars().next().map_or(true, |c| !c.is_alphanumeric() && c != '_') {
+            if after.chars().next().is_none_or(|c| !c.is_alphanumeric() && c != '_') {
                 for _ in kw.chars() { self.advance(); }
                 return Ok(());
             }
@@ -383,7 +383,7 @@ fn parse_prefix(c: &mut Cursor) -> Result<Expr> {
             let saved = (c.pos, c.line, c.col);
             c.advance();
             c.skip_ws();
-            if c.peek().map_or(false, |ch| ch.is_ascii_digit()) {
+            if c.peek().is_some_and(|ch| ch.is_ascii_digit()) {
                 // Negative literal (restore '-' and re-parse as int)
                 c.pos = saved.0; c.line = saved.1; c.col = saved.2;
                 let val = c.parse_int()?;
@@ -599,21 +599,21 @@ fn parse_block_expr(c: &mut Cursor) -> Result<Expr> {
         if c.peek().is_none() { return Err(c.err("unterminated block".into())); }
 
         // Try to parse a statement
-        if let Some('l') = c.peek() {
-            if c.rest().starts_with("let ") || c.rest().starts_with("let\n") || c.rest().starts_with("let\t") || c.rest().starts_with("let\r") {
-                // Actually check if it's the `let` keyword
-                let _saved = (c.pos, c.line, c.col);
-                consume_keyword(c); // "let"
-                let name = c.parse_name()?;
-                let typ = if c.try_char(':') { Some(parse_type(c)?) } else { None };
-                c.expect_char('=')?;
-                let value = parse_expr(c, 0)?;
-                stmts.push(Stmt::Let(name, typ, value));
-                // Optional semicolon
-                c.skip_ws_and_comments();
-                if c.peek() == Some(';') { c.advance(); }
-                continue;
-            }
+        if let Some('l') = c.peek()
+            && (c.rest().starts_with("let ") || c.rest().starts_with("let\n") || c.rest().starts_with("let\t") || c.rest().starts_with("let\r"))
+        {
+            // Actually check if it's the `let` keyword
+            let _saved = (c.pos, c.line, c.col);
+            consume_keyword(c); // "let"
+            let name = c.parse_name()?;
+            let typ = if c.try_char(':') { Some(parse_type(c)?) } else { None };
+            c.expect_char('=')?;
+            let value = parse_expr(c, 0)?;
+            stmts.push(Stmt::Let(name, typ, value));
+            // Optional semicolon
+            c.skip_ws_and_comments();
+            if c.peek() == Some(';') { c.advance(); }
+            continue;
         }
 
         // It's an expression
@@ -695,7 +695,7 @@ fn peek_keyword(c: &mut Cursor) -> String {
 fn consume_keyword(c: &mut Cursor) -> String {
     let kw = peek_keyword(c);
     for _ in 0..kw.len() {
-        if let Some(_) = c.peek() { c.advance(); }
+        if c.peek().is_some() { c.advance(); }
     }
     kw
 }

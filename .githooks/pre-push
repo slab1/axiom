@@ -1,0 +1,18 @@
+#!/bin/sh
+# Pre-push gate: run the same tests CI runs, locally, before pushing.
+# Catches compile/type errors (e.g. feature-gated MLIR stubs) before they
+# reach GitHub Actions. Set: git config core.hooksPath .githooks
+set -e
+
+echo "==> pre-push: cargo test --workspace"
+cargo test --workspace --quiet
+
+# If a local LLVM/MLIR 17+18 install exists, also gate the mlir path.
+if [ -d /usr/lib/llvm-17 ] && [ -d /usr/lib/llvm-18 ]; then
+    echo "==> pre-push: cargo test --features mlir"
+    TABLEGEN_170_PREFIX=/usr/lib/llvm-17 cargo test --features mlir --quiet
+else
+    echo "==> pre-push: skipping mlir tests (LLVM 17/18 not installed locally)"
+fi
+
+echo "==> pre-push: all checks passed"

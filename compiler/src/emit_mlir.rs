@@ -143,7 +143,10 @@ impl<'c> ValueStore<'c> {
     fn try_resolve(&self, v: &axiom_ir::ValueRef) -> Option<Value<'c, 'static>> {
         match v {
             axiom_ir::ValueRef::BlockArg { param_index, .. } => {
-                self.block_args[*param_index]
+                // Bounds-check so a function param referenced from a nested
+                // scf region (whose local store has 0 block args) falls back
+                // to the parent store instead of panicking.
+                self.block_args.get(*param_index).copied().flatten()
             }
             axiom_ir::ValueRef::OpResult {
                 op_index,
@@ -151,7 +154,7 @@ impl<'c> ValueStore<'c> {
                 ..
             } => {
                 let s = op_index * MAX_RESULTS + result_index;
-                self.op_results[s]
+                self.op_results.get(s).copied().flatten()
             }
         }
     }
@@ -356,7 +359,9 @@ fn emit_function<'c>(
                 let lower_bound = store.resolve(&for_op.lower_bound);
                 let upper_bound = store.resolve(&for_op.upper_bound);
                 let step = store.resolve(&for_op.step);
-                let iter_args: Vec<Value<'c, '_>> = for_op
+                // melior's `scf::r#for` takes only (start, end, step); loop-carried
+                // iter_args are resolved here for future support but not emitted yet.
+                let _iter_args: Vec<Value<'c, '_>> = for_op
                     .iter_args
                     .iter()
                     .map(|v| store.resolve(v))
@@ -650,7 +655,9 @@ fn build_scf_region<'c>(
                 let lower_bound = resolve_scoped(&for_op.lower_bound, &local_store, parent_store);
                 let upper_bound = resolve_scoped(&for_op.upper_bound, &local_store, parent_store);
                 let step = resolve_scoped(&for_op.step, &local_store, parent_store);
-                let iter_args: Vec<Value<'c, '_>> = for_op
+                // melior's `scf::r#for` takes only (start, end, step); loop-carried
+                // iter_args are resolved here for future support but not emitted yet.
+                let _iter_args: Vec<Value<'c, '_>> = for_op
                     .iter_args
                     .iter()
                     .map(|v| resolve_scoped(v, &local_store, parent_store))
@@ -671,18 +678,6 @@ fn build_scf_region<'c>(
                         let v: Value<'c, '_> = val.into();
                         local_store.store_op_result(op_idx, i, &v);
                     }
-                }
-            }
-
-            _ => {
-                // Unsupported op in SCF region — emit zero placeholder to keep
-                // the slot filled and avoid index collisions with parent values.
-                let i64_type: Type = IntegerType::new(context, 64).into();
-                let attr: melior::ir::Attribute = IntegerAttribute::new(0, i64_type).into();
-                let op_ref = block.append_operation(arith::constant(context, attr, location));
-                if let Ok(val) = op_ref.result(0) {
-                    let v: Value<'c, '_> = val.into();
-                    local_store.store_op_result(op_idx, 0, &v);
                 }
             }
         }

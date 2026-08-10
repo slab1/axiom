@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Build & Test
+    name: Build & Test (default)
     strategy:
       fail-fast: false
       matrix:
@@ -22,15 +22,6 @@ jobs:
         with:
           toolchain: stable
 
-      # Phase 1+ requires LLVM/MLIR with the C API.
-      # Until emit_mlir.rs is wired, the workspace still builds without it
-      # because melior is an optional dependency (feature-gated below).
-      - name: Install LLVM/MLIR (Phase 1+)
-        if: false  # enable once emit_mlir is active: ubuntu only for now
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y llvm-18-dev libmlir-18-dev mlir-18-tools
-
       - name: Cache cargo
         uses: actions/cache@v4
         with:
@@ -40,6 +31,8 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+      # Default workspace build MUST stay dependency-free (turnkey for
+      # contributors). This job guards that invariant.
       - name: Check
         run: cargo check --workspace
 
@@ -48,3 +41,43 @@ jobs:
 
       - name: Build (release)
         run: cargo build --workspace --release
+
+  test-mlir:
+    # The MLIR backend (emit_mlir.rs / jit.rs) is feature-gated behind
+    # --features mlir. It needs LLVM 17 (tblgen via melior-macro) AND
+    # LLVM 18 (mlir-sys C API) — so it can only run on ubuntu. This job is
+    # the safety net that catches build/test regressions in the MLIR path
+    # on every commit and PR. Keep it enabled permanently.
+    name: Build & Test (--features mlir)
+    runs-on: ubuntu-latest
+    env:
+      TABLEGEN_170_PREFIX: /usr/lib/llvm-17
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (edition 2024)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      # tblgen (melior-macro 0.8.1 -> tblgen 0.3.0 with llvm17-0) requires
+      # LLVM 17 for llvm-config; mlir-sys (melior 0.14) requires LLVM 18.
+      - name: Install LLVM 17 + LLVM 18/MLIR (C API)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm-17-dev llvm-18-dev libmlir-18-dev mlir-18-tools
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ubuntu-mlir-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Test (--features mlir)
+        run: cargo test --features mlir
+
+      - name: Build release (--features mlir)
+        run: cargo build --features mlir --release

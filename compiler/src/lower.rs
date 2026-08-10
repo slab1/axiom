@@ -256,7 +256,7 @@ fn lower_stmt(stmt: &ast::Stmt, ctx: &mut LowerCtx) -> Result<()> {
     match stmt {
         ast::Stmt::Let(name, typ, value) => {
             let vr = lower_expr(value, ctx)?;
-            let _core_typ = typ.as_ref().map(|t| ast::to_core_type(t))
+            let _core_typ = typ.as_ref().map(ast::to_core_type)
                 .unwrap_or_else(|| vr.typ().clone());
             ctx.vars.insert(name.clone(), vr);
             Ok(())

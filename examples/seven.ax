@@ -1,0 +1,4 @@
+fn seven() -> I64 {
+    %c = const 7 : I64
+    ret %c
+}
