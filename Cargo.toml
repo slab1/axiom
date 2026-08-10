@@ -9,6 +9,15 @@
 members = ["compiler", "axiom-trace"]
 resolver = "2"
 
+# melior 0.14.0 as published on crates.io does NOT compile against its own
+# melior-macro 0.8.1 (missing async_passes!/gpu_passes!/linalg_passes! macros)
+# nor against the MLIR 18 C API (mlirLLVMPointerTypeGet signature + string_ref
+# i8/u8). We vendor a patched copy (vendor/melior) with those modules disabled
+# and the MLIR 18 API fixes applied, so CI builds the exact same source that
+# works locally. See vendor/melior/README.md for the patch manifest.
+[patch.crates-io]
+melior = { path = "vendor/melior" }
+
 [workspace.package]
 edition = "2024"
 license = "MIT"
